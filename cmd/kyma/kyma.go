@@ -2,6 +2,9 @@ package kyma
 
 import (
 	"github.com/kyma-project/cli/cmd/kyma/completion"
+	"github.com/kyma-project/cli/cmd/kyma/connectivity"
+	"github.com/kyma-project/cli/cmd/kyma/connectivity/createApplication"
+	"github.com/kyma-project/cli/cmd/kyma/connectivity/createToken"
 	"github.com/kyma-project/cli/cmd/kyma/console"
 	"github.com/kyma-project/cli/cmd/kyma/install"
 	"github.com/kyma-project/cli/cmd/kyma/provision/azure"
@@ -50,12 +53,17 @@ For more information, see: https://github.com/kyma-project/cli
 	provisionCmd.AddCommand(gardener.NewCmd(gardener.NewOptions(o)))
 	provisionCmd.AddCommand(azure.NewCmd(azure.NewOptions(o)))
 
+	connectivityCmd := connectivity.NewCmd()
+	connectivityCmd.AddCommand(createApplication.NewCmd(createApplication.NewOptions(o)))
+	connectivityCmd.AddCommand(createToken.NewCmd(createToken.NewOptions(o)))
+
 	cmd.AddCommand(
 		version.NewCmd(version.NewOptions(o)),
 		completion.NewCmd(),
 		install.NewCmd(install.NewOptions(o)),
 		provisionCmd,
 		console.NewCmd(console.NewOptions(o)),
+		connectivityCmd,
 	)
 
 	testCmd := test.NewCmd()
