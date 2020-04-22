@@ -3,6 +3,7 @@ package kyma
 import (
 	"github.com/kyma-project/cli/cmd/kyma/completion"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity"
+	"github.com/kyma-project/cli/cmd/kyma/connectivity/bindNamespace"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity/createApplication"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity/createToken"
 	"github.com/kyma-project/cli/cmd/kyma/console"
@@ -56,6 +57,7 @@ For more information, see: https://github.com/kyma-project/cli
 	connectivityCmd := connectivity.NewCmd()
 	connectivityCmd.AddCommand(createApplication.NewCmd(createApplication.NewOptions(o)))
 	connectivityCmd.AddCommand(createToken.NewCmd(createToken.NewOptions(o)))
+	connectivityCmd.AddCommand(bindNamespace.NewCmd(bindNamespace.NewOptions(o)))
 
 	cmd.AddCommand(
 		version.NewCmd(version.NewOptions(o)),
