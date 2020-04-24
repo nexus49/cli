@@ -1,0 +1,27 @@
+# This is a template deployment file that can be used for future deployments
+
+{{if .Expose }}apiVersion: gateway.kyma-project.io/v1alpha2
+kind: Api
+metadata:
+  name: {{ .Name }}-api
+  namespace: {{ .Namespace }}
+spec:
+  authentication: []
+  hostname: {{ .Name }}.kc3.i347365.shoot.canary.k8s-hana.ondemand.com
+  service:
+    name: {{ .Name }}
+    port: 8080
+---{{end}}
+apiVersion: kubeless.io/v1beta1
+kind: Function
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Namespace }}
+  labels:
+    app: {{ .Name }}
+spec:
+  function: |-
+    !!Your Function code here!!
+  runtime: nodejs8
+  type: HTTP
+  handler: handler.main

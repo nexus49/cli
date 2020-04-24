@@ -9,6 +9,7 @@ replace (
 	github.com/ugorji/go v0.0.0-20180813092308-00b869d2f4a5 => github.com/ugorji/go v0.0.0-20181204163529-d75b2dcb6bc8
 	// Docker client has an issue on windows with the latest sys package, we have to fix the version
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20190710143415-6ec70d6a5542
+	k8s.io/client-go => k8s.io/client-go v12.0.0+incompatible
 )
 
 require (
@@ -22,6 +23,7 @@ require (
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
 	github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 // indirect
 	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
+	github.com/google/martian v2.1.0+incompatible
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/kyma-incubator/hydroform/provision v0.0.0-20200407114214-ed53cc23ce14
 	github.com/kyma-incubator/octopus v0.0.0-20191009105757-2e9d86cd9967
@@ -32,17 +34,20 @@ require (
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.8.1
+	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
+	google.golang.org/appengine v1.6.1
 	google.golang.org/genproto v0.0.0-20191002211648-c459b9ce5143 // indirect
+	gopkg.in/square/go-jose.v2 v2.5.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.0.0-20191114100237-2cd11237263f
 	k8s.io/apimachinery v0.0.0-20191004115701-31ade1b30762
-	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	sigs.k8s.io/yaml v1.1.0
 )

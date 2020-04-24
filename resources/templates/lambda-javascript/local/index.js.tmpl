@@ -1,0 +1,35 @@
+/*jshint esversion: 6 */
+
+var handler = require('../handler.js');
+var http = require('http');
+
+const blue = "\x1b[34m";
+const green = "\x1b[32m";
+const red = "\x1b[31m";
+const reset = "\x1b[0m";
+
+http.createServer(function (req, res) {
+  let data = [];
+  req.on('data', chunk => {
+    data.push(chunk);
+  });
+  req.on('end', () => {
+    try {
+      console.log(`${blue}Headers${reset}: ${JSON.stringify(req.headers)}`);
+      console.log(`${blue}Request${reset}: ${req.method}`);
+      if(data.length > 0) {
+        var event = { data: JSON.parse(data)};
+        console.log(`${blue}Event${reset}:`, JSON.stringify(event, null, 4));
+      }
+
+      var result = handler.main(event, req);
+      console.log(`${green}Result${reset}`, JSON.stringify(result, null, 4));
+      res.write(result);
+    } catch (err) {
+      console.log(`${red}Error${reset}`, err);
+      res.write(err);
+      res.statusCode = 500;
+    }
+    res.end();
+  });
+}).listen(8080);

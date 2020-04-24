@@ -7,6 +7,10 @@ import (
 	"github.com/kyma-project/cli/cmd/kyma/connectivity/createApplication"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity/createToken"
 	"github.com/kyma-project/cli/cmd/kyma/console"
+	"github.com/kyma-project/cli/cmd/kyma/dev"
+	devDebug "github.com/kyma-project/cli/cmd/kyma/dev/debug"
+	devDeploy "github.com/kyma-project/cli/cmd/kyma/dev/deploy"
+	devNewLambda "github.com/kyma-project/cli/cmd/kyma/dev/newLambda"
 	"github.com/kyma-project/cli/cmd/kyma/install"
 	"github.com/kyma-project/cli/cmd/kyma/provision/azure"
 	"github.com/kyma-project/cli/cmd/kyma/provision/gardener"
@@ -59,6 +63,11 @@ For more information, see: https://github.com/kyma-project/cli
 	connectivityCmd.AddCommand(createToken.NewCmd(createToken.NewOptions(o)))
 	connectivityCmd.AddCommand(bindNamespace.NewCmd(bindNamespace.NewOptions(o)))
 
+	devCmd := dev.NewCmd()
+	devCmd.AddCommand(devNewLambda.NewCmd(devNewLambda.NewOptions(o)))
+	devCmd.AddCommand(devDeploy.NewCmd(devDeploy.NewOptions(o)))
+	devCmd.AddCommand(devDebug.NewCmd(devDebug.NewOptions(o)))
+
 	cmd.AddCommand(
 		version.NewCmd(version.NewOptions(o)),
 		completion.NewCmd(),
@@ -66,6 +75,7 @@ For more information, see: https://github.com/kyma-project/cli
 		provisionCmd,
 		console.NewCmd(console.NewOptions(o)),
 		connectivityCmd,
+		devCmd,
 	)
 
 	testCmd := test.NewCmd()
