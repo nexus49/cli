@@ -1,6 +1,8 @@
 package deploy
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -133,6 +135,12 @@ func ensureFunction(config *dev.Config, currentDir string, kube kube.KymaKube) e
 	}
 	functionCode := string(b)
 
+	checksum, err := getChecksum(functionCode)
+	if err != nil {
+		return errors.Wrap(err, "Cannot generate checksum")
+	}
+	checksum = fmt.Sprintf("sha256:%s", checksum)
+
 	var dependencies *string
 	packageFile := filepath.Join(currentDir, "package.json")
 	if dev.FileExists(packageFile) {
@@ -159,11 +167,15 @@ func ensureFunction(config *dev.Config, currentDir string, kube kube.KymaKube) e
 		if err := unstructured.SetNestedField(itm.Object, functionCode, "spec", "function"); err != nil {
 			errors.Wrap(err, "Failed to update function.")
 		}
+		if err := unstructured.SetNestedField(itm.Object, checksum, "spec", "checksum"); err != nil {
+			errors.Wrap(err, "Failed to update checksum.")
+		}
 		if dependencies != nil {
 			if err := unstructured.SetNestedField(itm.Object, *dependencies, "spec", "deps"); err != nil {
 				errors.Wrap(err, "Failed to update function.")
 			}
 		}
+
 		_, err := kube.Dynamic().Resource(functionRes).Namespace(config.Namespace).Update(itm, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrap(err, "Failed to update function.")
@@ -182,17 +194,18 @@ func ensureFunction(config *dev.Config, currentDir string, kube kube.KymaKube) e
 					},
 				},
 				"spec": map[string]interface{}{
-					"deps":     "",
+					"checksum": checksum,
 					"runtime":  "nodejs8",
 					"type":     "HTTP",
 					"handler":  "handler.main",
 					"function": functionCode,
+					"deps":     "",
 				},
 			},
 		}
 
 		if dependencies != nil {
-			if err := unstructured.SetNestedField(itm.Object, *dependencies, "spec", "deps"); err != nil {
+			if err := unstructured.SetNestedField(newFunction.Object, *dependencies, "spec", "deps"); err != nil {
 				errors.Wrap(err, "Failed to update function.")
 			}
 		}
@@ -249,4 +262,13 @@ func ensureApi(config *dev.Config, currentDir string, kube kube.KymaKube) error 
 	}
 
 	return nil
+}
+
+func getChecksum(content string) (string, error) {
+	h := sha256.New()
+	_, err := h.Write([]byte(content))
+	if err != nil {
+		return "", nil
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

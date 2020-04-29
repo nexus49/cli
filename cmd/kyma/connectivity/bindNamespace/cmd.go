@@ -35,6 +35,7 @@ func NewCmd(o *Options) *cobra.Command {
 	cmd.Flags().StringVarP(&o.Name, "name", "n", "", "Name of application to create the token for")
 	cmd.Flags().StringVar(&o.Namespace, "namespace", "", "Namespace to bind")
 	cmd.Flags().BoolVar(&o.CreateIfNotExisting, "create", false, "Create the namespace if not existing")
+	cmd.Flags().BoolVar(&o.IgnoreIfExisting, "ignore-if-existing", false, "This flags ignores it silently, if the application already exists ")
 
 	return cmd
 }
@@ -49,7 +50,7 @@ func (cmd *command) Run() error {
 		return errors.Wrap(err, "Could not initialize the Kubernetes client. Make sure your kubeconfig is valid")
 	}
 
-	err = bindNamespace(cmd.opts.Name, cmd.opts.Namespace, cmd.opts.CreateIfNotExisting, cmd.K8s)
+	err = bindNamespace(cmd.opts.Name, cmd.opts.Namespace, cmd.opts.CreateIfNotExisting, cmd.opts.IgnoreIfExisting, cmd.K8s)
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (c *command) validateFlags() error {
 	return nil
 }
 
-func bindNamespace(name string, namespace string, createIfNotExisting bool, kube kube.KymaKube) error {
+func bindNamespace(name string, namespace string, createIfNotExisting bool, ignoreIfExisting bool, kube kube.KymaKube) error {
 
 	exists, err := connectivity.ApplicationExists(name, kube)
 	if err != nil {
@@ -107,20 +108,33 @@ func bindNamespace(name string, namespace string, createIfNotExisting bool, kube
 		}
 	}
 
-	applicationMappingRes := schema.GroupVersionResource{Group: "applicationconnector.kyma-project.io", Version: "v1alpha1", Resource: "applicationmappings"}
-	newApplicationMapping := &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "applicationconnector.kyma-project.io/v1alpha1",
-			"kind":       "ApplicationMapping",
-			"metadata": map[string]interface{}{
-				"name": name,
-			},
-		},
+	exists, err = connectivity.ApplicationMappingExists(name, namespace, kube)
+	if err != nil {
+		return errors.Wrap(err, "Failed to request Namespace")
 	}
 
-	_, err = kube.Dynamic().Resource(applicationMappingRes).Namespace(namespace).Create(newApplicationMapping, metav1.CreateOptions{})
-	if err != nil {
-		return errors.Wrap(err, "Failed to create applicationMapping.")
+	if !exists {
+		applicationMappingRes := schema.GroupVersionResource{Group: "applicationconnector.kyma-project.io", Version: "v1alpha1", Resource: "applicationmappings"}
+		newApplicationMapping := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "applicationconnector.kyma-project.io/v1alpha1",
+				"kind":       "ApplicationMapping",
+				"metadata": map[string]interface{}{
+					"name": name,
+				},
+			},
+		}
+
+		_, err = kube.Dynamic().Resource(applicationMappingRes).Namespace(namespace).Create(newApplicationMapping, metav1.CreateOptions{})
+		if err != nil {
+			return errors.Wrap(err, "Failed to create applicationMapping.")
+		}
+	} else {
+		if ignoreIfExisting {
+			return nil
+		} else {
+			return errors.New("Mapping already exists")
+		}
 	}
 
 	return nil

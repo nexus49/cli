@@ -34,6 +34,7 @@ func NewCmd(o *Options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&o.Name, "name", "n", "", "Name of application to be created")
+	cmd.Flags().BoolVar(&o.IgnoreIfExisting, "ignore-if-existing", false, "This flags ignores it silently, if the application already exists ")
 
 	return cmd
 }
@@ -48,7 +49,7 @@ func (cmd *command) Run() error {
 		return errors.Wrap(err, "Could not initialize the Kubernetes client. Make sure your kubeconfig is valid")
 	}
 
-	err = createApplication(cmd.opts.Name, cmd.K8s)
+	err = createApplication(cmd.opts.Name, cmd.opts.IgnoreIfExisting, cmd.K8s)
 	if err != nil {
 		return errors.Wrap(err, "Could not create Application")
 	}
@@ -68,7 +69,7 @@ func (c *command) validateFlags() error {
 	return nil
 }
 
-func createApplication(name string, kube kube.KymaKube) error {
+func createApplication(name string, ignoreIfExisting bool, kube kube.KymaKube) error {
 	applicationRes := schema.GroupVersionResource{
 		Group:    "applicationconnector.kyma-project.io",
 		Version:  "v1alpha1",
@@ -82,7 +83,11 @@ func createApplication(name string, kube kube.KymaKube) error {
 	}
 
 	if itm != nil {
-		return errors.New("Item already exists")
+		if ignoreIfExisting {
+			return nil
+		} else {
+			return errors.New("Item already exists")
+		}
 	}
 
 	newApplication := &unstructured.Unstructured{

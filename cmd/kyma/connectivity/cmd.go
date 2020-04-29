@@ -43,3 +43,16 @@ func NamespaceExists(name string, kube kube.KymaKube) (bool, error) {
 	}
 	return true, nil
 }
+
+func ApplicationMappingExists(name string, namespace string, kube kube.KymaKube) (bool, error) {
+	// Verify if application exists
+	res := schema.GroupVersionResource{Group: "applicationconnector.kyma-project.io", Version: "v1alpha1", Resource: "applicationmappings"}
+	_, err := kube.Dynamic().Resource(res).Namespace(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		if k8sErrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, errors.Wrap(err, "Cannot request application mapping")
+	}
+	return true, nil
+}

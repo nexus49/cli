@@ -7,6 +7,7 @@ type Options struct {
 	Name                string
 	Namespace           string
 	CreateIfNotExisting bool
+	IgnoreIfExisting    bool
 }
 
 //NewOptions creates options with default values

@@ -5,7 +5,8 @@ import "github.com/kyma-project/cli/internal/cli"
 type Options struct {
 	*cli.Options
 
-	Name string
+	Name             string
+	IgnoreIfExisting bool
 }
 
 //NewOptions creates options with default values

@@ -23,8 +23,8 @@ require (
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
 	github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 // indirect
 	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
-	github.com/google/martian v2.1.0+incompatible
 	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/kubeless/kubeless v1.0.6 // indirect
 	github.com/kyma-incubator/hydroform/provision v0.0.0-20200407114214-ed53cc23ce14
 	github.com/kyma-incubator/octopus v0.0.0-20191009105757-2e9d86cd9967
 	github.com/kyma-project/kyma v0.5.1-0.20190909070658-69599d4a33a2
@@ -40,9 +40,8 @@ require (
 	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
-	google.golang.org/appengine v1.6.1
 	google.golang.org/genproto v0.0.0-20191002211648-c459b9ce5143 // indirect
-	gopkg.in/square/go-jose.v2 v2.5.0
+	gopkg.in/square/go-jose.v2 v2.5.0 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
