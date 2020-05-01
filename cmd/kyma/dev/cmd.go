@@ -33,11 +33,15 @@ func FileExists(path string) bool {
 }
 
 type Config struct {
-	Name          string `json:"name"`
-	Namespace     string `json:"namespace"`
-	File          string `json:"file"`
-	Expose        bool   `json:"expose"`
-	ClusterDomain string `json:"clusterDomain"`
+	Name          string    `json:"name"`
+	Namespace     string    `json:"namespace"`
+	File          string    `json:"file"`
+	Expose        bool      `json:"expose"`
+	ClusterDomain string    `json:"clusterDomain"`
+	Triggers      *[]string `json:"triggers"`
+}
+
+type Trigger struct {
 }
 
 func GetConfig(workdir string) (*Config, *string, error) {

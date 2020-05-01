@@ -32,28 +32,35 @@ func NewCmd(o *Options) *cobra.Command {
 		Use:   "new-lambda",
 		Short: "New local Lambda Function",
 		Long:  `Creates a new local lambda function setup to start development`,
-		RunE:  func(_ *cobra.Command, _ []string) error { return c.Run() },
+		RunE:  func(_ *cobra.Command, args []string) error { return c.Run(args) },
 	}
 
-	cmd.Flags().StringVarP(&o.Name, "name", "n", "", "Name of application to create the token for")
-	cmd.Flags().StringVar(&o.Namespace, "namespace", "default", "Namespace to bind")
+	cmd.Args = cobra.ExactArgs(1)
+
+	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "default", "Namespace to bind")
 	cmd.Flags().BoolVar(&o.Expose, "expose", false, "Create the namespace if not existing")
 	cmd.Flags().StringVar(&o.ClusterDomain, "cluster-domain", "", "Cluster Domain of your cluster")
 
 	return cmd
 }
 
-func (cmd *command) Run() error {
+func (cmd *command) Run(args []string) error {
 	if err := cmd.validateFlags(); err != nil {
 		return err
 	}
+
+	if err := cmd.validateArgs(args); err != nil {
+		return err
+	}
+
+	name := args[0]
 
 	var err error
 	if cmd.K8s, err = kube.NewFromConfig("", cmd.KubeconfigPath); err != nil {
 		return errors.Wrap(err, "Could not initialize the Kubernetes client. Make sure your kubeconfig is valid")
 	}
 
-	err = createNewTemplate(cmd.opts.Name, cmd.opts.Namespace, cmd.opts.Expose, cmd.opts.ClusterDomain, cmd.K8s)
+	err = createNewTemplate(name, cmd.opts.Namespace, cmd.opts.Expose, cmd.opts.ClusterDomain, cmd.K8s)
 	if err != nil {
 		return err
 	}
@@ -61,13 +68,22 @@ func (cmd *command) Run() error {
 	return nil
 }
 
+func (c *command) validateArgs(args []string) error {
+	var errMessage strings.Builder
+	// mandatory flags
+	if len(args) != 1 {
+		errMessage.WriteString("\nRequired argument `name` has not been set.")
+	}
+
+	if errMessage.Len() != 0 {
+		return errors.New(errMessage.String())
+	}
+	return nil
+}
+
 func (c *command) validateFlags() error {
 	var errMessage strings.Builder
 	// mandatory flags
-	if c.opts.Name == "" {
-		errMessage.WriteString("\nRequired flag `name` has not been set.")
-	}
-
 	if c.opts.KubeconfigPath == "" {
 		usr, err := user.Current()
 		if err != nil {

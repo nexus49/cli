@@ -3,11 +3,11 @@ package createApplication
 import (
 	"strings"
 
-	"github.com/google/martian/log"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity"
 	"github.com/kyma-project/cli/internal/cli"
 	"github.com/kyma-project/cli/internal/kube"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"

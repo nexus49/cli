@@ -24,6 +24,7 @@ require (
 	github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 // indirect
 	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
 	github.com/google/martian v2.1.0+incompatible
+	github.com/google/uuid v1.1.1
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/kubeless/kubeless v1.0.6 // indirect
 	github.com/kyma-incubator/hydroform/provision v0.0.0-20200407114214-ed53cc23ce14

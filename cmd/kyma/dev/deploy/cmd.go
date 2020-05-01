@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cli/cmd/kyma/dev"
 	"github.com/kyma-project/cli/internal/cli"
 	"github.com/kyma-project/cli/internal/kube"
@@ -216,7 +217,93 @@ func ensureFunction(config *dev.Config, currentDir string, kube kube.KymaKube) e
 		}
 	}
 
+	err = ensureTriggers(config.Name, config.Namespace, config.Triggers, kube)
+	if err != nil {
+		return errors.Wrap(err, "Failed to setup triggers.")
+	}
+
 	return nil
+}
+
+func ensureTriggers(functionName string, namespace string, triggers *[]string, kube kube.KymaKube) error {
+	if triggers == nil {
+		return nil
+	}
+
+	triggerRes := schema.GroupVersionResource{Group: "eventing.knative.dev", Version: "v1alpha1", Resource: "triggers"}
+	triggerList, err := kube.Dynamic().Resource(triggerRes).Namespace(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "Failed to get ttriggers")
+	}
+
+	for _, trigger := range *triggers {
+
+		split := strings.Split(trigger, "/")
+		if len(split) != 2 {
+			return errors.New("Invalid trigger definition")
+		}
+
+		eventName := split[0]
+		version := split[1]
+
+		exists, err := triggerExists(eventName, version, namespace, triggerList)
+		if err != nil {
+			return errors.Wrap(err, "Failed to process triggers")
+		}
+		if !exists {
+			log.Info("Creating trigger")
+			newTrigger := &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": "eventing.knative.dev/v1alpha1",
+					"kind":       "Trigger",
+					"metadata": map[string]interface{}{
+						"name": uuid.New().String(),
+						"labels": map[string]interface{}{
+							"Function":                    functionName,
+							"eventing.knative.dev/broker": "default",
+						},
+					},
+					"spec": map[string]interface{}{
+						"broker": "default",
+						"filter": map[string]interface{}{
+							"attributes": map[string]interface{}{
+								"eventtypeversion": version,
+								"source":           namespace,
+								"type":             eventName,
+							},
+						},
+						"subscriber": map[string]interface{}{
+							"uri": fmt.Sprintf("http://%s.%s:8080/", functionName, namespace),
+						},
+					},
+				},
+			}
+			_, err = kube.Dynamic().Resource(triggerRes).Namespace(namespace).Create(newTrigger, metav1.CreateOptions{})
+			if err != nil {
+				return errors.Wrap(err, "Failed to create trigger.")
+			}
+		}
+	}
+	return nil
+}
+
+func triggerExists(name string, version string, namespace string, triggerList *unstructured.UnstructuredList) (bool, error) {
+
+	for _, itm := range triggerList.Items {
+		spec := itm.Object["spec"].(map[string]interface{})
+		if filterObj, ok := spec["filter"]; ok {
+			filter := filterObj.(map[string]interface{})
+			attributes := filter["attributes"].(map[string]interface{})
+			eventVersion := attributes["eventtypeversion"]
+			eventSource := attributes["source"]
+			eventType := attributes["type"]
+			if eventVersion == version && eventSource == namespace && eventType == name {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func ensureApi(config *dev.Config, currentDir string, kube kube.KymaKube) error {
