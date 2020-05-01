@@ -2,6 +2,7 @@ package bindNamespace
 
 import (
 	"strings"
+	"time"
 
 	"github.com/kyma-project/cli/cmd/kyma/connectivity"
 	"github.com/kyma-project/cli/internal/cli"
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -151,6 +153,11 @@ func bindNamespace(name string, namespace string, createIfNotExisting bool, igno
 		}
 	}
 
+	err = waitForServiceClasses(name, namespace, 15, kube)
+	if err != nil {
+		return errors.Wrap(err, "Failed to check service classes")
+	}
+
 	err = ensureInstances(namespace, kube)
 	if err != nil {
 		return errors.Wrap(err, "Failed to manage service instances")
@@ -242,4 +249,61 @@ func collectClassesForProvider(provider string, broker string, namespace string,
 		}
 	}
 	return classes, nil
+}
+
+func waitForServiceClasses(name string, namespace string, maxRetries int, kube kube.KymaKube) error {
+
+	applicationRes := schema.GroupVersionResource{Group: "applicationconnector.kyma-project.io", Version: "v1alpha1", Resource: "applications"}
+	application, err := kube.Dynamic().Resource(applicationRes).Get(name, metav1.GetOptions{})
+	if err != nil {
+		if !k8sErrors.IsNotFound(err) {
+			return errors.Wrap(err, "Failed to get Application")
+		} else {
+			return errors.Wrap(err, "Resource does not exist")
+		}
+	}
+
+	numberOfServices := getNumberOfServices(application)
+
+	serviceClassRes := schema.GroupVersionResource{Group: "servicecatalog.k8s.io", Version: "v1beta1", Resource: "serviceclasses"}
+	serviceClasses, err := kube.Dynamic().Resource(serviceClassRes).Namespace(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "Failed to get serviceclasses")
+	}
+	numberOfDeployedServiceClasses := collectServiceClasses(serviceClasses, name)
+
+	if numberOfDeployedServiceClasses == numberOfServices {
+		return nil
+	}
+
+	log.Debug("Waiting for classes.")
+	time.Sleep(5 * time.Second)
+	if maxRetries > 0 {
+		return waitForServiceClasses(name, namespace, maxRetries-1, kube)
+	} else {
+		return errors.New("Application deployment did not end up in DEPLOYED")
+	}
+}
+
+func getNumberOfServices(application *unstructured.Unstructured) int {
+	spec := application.Object["spec"].(map[string]interface{})
+	services := spec["services"].([]interface{})
+	return len(services)
+}
+
+func collectServiceClasses(classes *unstructured.UnstructuredList, applicationName string) int {
+	matches := []map[string]interface{}{}
+	for _, itm := range classes.Items {
+		spec := itm.Object["spec"].(map[string]interface{})
+		if externalMetadataItm, ok := spec["externalMetadata"]; ok {
+			externalMetadata := externalMetadataItm.(map[string]interface{})
+			labels := externalMetadata["labels"].(map[string]interface{})
+			app := labels["connected-app"].(string)
+			if app == applicationName {
+				matches = append(matches, itm.Object)
+			}
+		}
+	}
+
+	return len(matches)
 }

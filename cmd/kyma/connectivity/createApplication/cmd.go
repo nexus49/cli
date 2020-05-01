@@ -2,8 +2,8 @@ package createApplication
 
 import (
 	"strings"
-	"time"
 
+	"github.com/kyma-project/cli/cmd/kyma/connectivity"
 	"github.com/kyma-project/cli/internal/cli"
 	"github.com/kyma-project/cli/internal/kube"
 	"github.com/pkg/errors"
@@ -124,39 +124,10 @@ func createApplication(name string, ignoreIfExisting bool, kube kube.KymaKube) e
 		return errors.Wrap(err, "Failed to create application.")
 	}
 
-	err = waitForDeployed(name, 15, kube)
+	err = connectivity.WaitForDeployed(name, nil, 15, "applications", kube)
 	if err != nil {
 		return errors.Wrap(err, "Failed to wait for application deployment.")
 	}
 
 	return nil
-}
-
-func waitForDeployed(name string, maxRetries int, kube kube.KymaKube) error {
-
-	applicationRes := schema.GroupVersionResource{Group: "applicationconnector.kyma-project.io", Version: "v1alpha1", Resource: "applications"}
-	itm, err := kube.Dynamic().Resource(applicationRes).Get(name, metav1.GetOptions{})
-	if err != nil {
-		if !k8sErrors.IsNotFound(err) {
-			return errors.Wrap(err, "Failed to check Application")
-		} else {
-			return errors.Wrap(err, "Application does not exist")
-		}
-	}
-
-	if status, ok := itm.Object["status"]; ok {
-		statusObj := status.(map[string]interface{})
-		installationStatus := statusObj["installationStatus"].(map[string]interface{})
-		installationStatusStatus := installationStatus["status"].(string)
-		if installationStatusStatus == "DEPLOYED" {
-			return nil
-		}
-	}
-
-	time.Sleep(5 * time.Second)
-	if maxRetries > 0 {
-		return waitForDeployed(name, maxRetries-1, kube)
-	} else {
-		return errors.New("Application deployment did not end up in DEPLOYED")
-	}
 }
