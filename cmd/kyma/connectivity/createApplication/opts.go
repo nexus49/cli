@@ -4,8 +4,6 @@ import "github.com/kyma-project/cli/internal/cli"
 
 type Options struct {
 	*cli.Options
-
-	Name             string
 	IgnoreIfExisting bool
 }
 

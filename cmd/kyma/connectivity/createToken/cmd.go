@@ -32,25 +32,30 @@ func NewCmd(o *Options) *cobra.Command {
 		Use:   "create-token",
 		Short: "Creates a new Token for an Application",
 		Long:  `Use this command to create a new token for an application`,
-		RunE:  func(_ *cobra.Command, _ []string) error { return c.Run() },
+		RunE:  func(_ *cobra.Command, args []string) error { return c.Run(args) },
 	}
 
-	cmd.Flags().StringVarP(&o.Name, "name", "n", "", "Name of application to create the token for")
-
+	cmd.Args = cobra.ExactArgs(1)
 	return cmd
 }
 
-func (cmd *command) Run() error {
+func (cmd *command) Run(args []string) error {
 	if err := cmd.validateFlags(); err != nil {
 		return err
 	}
+
+	if err := cmd.validateArgs(args); err != nil {
+		return err
+	}
+
+	name := args[0]
 
 	var err error
 	if cmd.K8s, err = kube.NewFromConfig("", cmd.KubeconfigPath); err != nil {
 		return errors.Wrap(err, "Could not initialize the Kubernetes client. Make sure your kubeconfig is valid")
 	}
 
-	token, err := createToken(cmd.opts.Name, cmd.K8s)
+	token, err := createToken(name, cmd.K8s)
 	if err != nil {
 		return errors.Wrap(err, "Could not create Application")
 	}
@@ -62,8 +67,18 @@ func (cmd *command) Run() error {
 func (c *command) validateFlags() error {
 	var errMessage strings.Builder
 	// mandatory flags
-	if c.opts.Name == "" {
-		errMessage.WriteString("\nRequired flag `name` has not been set.")
+
+	if errMessage.Len() != 0 {
+		return errors.New(errMessage.String())
+	}
+	return nil
+}
+
+func (c *command) validateArgs(args []string) error {
+	var errMessage strings.Builder
+	// mandatory flags
+	if len(args) != 1 {
+		errMessage.WriteString("\nRequired argument `name` has not been set.")
 	}
 
 	if errMessage.Len() != 0 {
