@@ -183,7 +183,7 @@ func ensureInstances(namespace string, kube kube.KymaKube) error {
 		description := spec["description"].(string)
 		scExternalName := spec["externalName"].(string)
 		if !hasInstance(scName, instances) {
-			log.Infof("Creating service instance for, %s", description)
+			log.Infof("Creating service instance for: %s", description)
 			newSci := &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "servicecatalog.k8s.io/v1beta1",

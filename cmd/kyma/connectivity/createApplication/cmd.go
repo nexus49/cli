@@ -3,6 +3,7 @@ package createApplication
 import (
 	"strings"
 
+	"github.com/google/martian/log"
 	"github.com/kyma-project/cli/cmd/kyma/connectivity"
 	"github.com/kyma-project/cli/internal/cli"
 	"github.com/kyma-project/cli/internal/kube"
@@ -128,6 +129,7 @@ func createApplication(name string, ignoreIfExisting bool, kube kube.KymaKube) e
 	if err != nil {
 		return errors.Wrap(err, "Failed to wait for application deployment.")
 	}
+	log.Infof("Application %s created successfully.", name)
 
 	return nil
 }

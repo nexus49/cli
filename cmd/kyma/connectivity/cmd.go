@@ -5,7 +5,6 @@ import (
 
 	"github.com/kyma-project/cli/internal/kube"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,7 +88,6 @@ func WaitForDeployed(name string, namespace *string, maxRetries int, resource st
 			return nil
 		}
 	}
-	log.Debug("Waiting for deployment.")
 	time.Sleep(5 * time.Second)
 	if maxRetries > 0 {
 		return WaitForDeployed(name, namespace, maxRetries-1, resource, kube)
