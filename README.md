@@ -160,3 +160,13 @@ To download the binaries, run:
 curl -Lo kyma https://storage.googleapis.com/kyma-cli-stable/kyma-darwin # kyma-linux or kyma.exe
 chmod +x kyma
 ```
+
+# Connectivity and Dev Command requirements
+
+1) Telepresence
+https://www.telepresence.io/
+
+Installation: Can be installed with homebrew on mac.
+
+2) nodemode
+NPM package, can be installed using `npm install nodemon -g`
