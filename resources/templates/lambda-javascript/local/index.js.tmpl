@@ -14,22 +14,29 @@ http.createServer(function (req, res) {
     data.push(chunk);
   });
   req.on('end', () => {
-    try {
       console.log(`${blue}Headers${reset}: ${JSON.stringify(req.headers)}`);
       console.log(`${blue}Request${reset}: ${req.method}`);
+      var event = {};
       if(data.length > 0) {
-        var event = { data: JSON.parse(data)};
+        event = { data: JSON.parse(data)};
         console.log(`${blue}Event${reset}:`, JSON.stringify(event, null, 4));
       }
 
-      var result = handler.main(event, req);
-      console.log(`${green}Result${reset}`, JSON.stringify(result, null, 4));
-      res.write(result);
-    } catch (err) {
-      console.log(`${red}Error${reset}`, err);
-      res.write(err);
-      res.statusCode = 500;
-    }
-    res.end();
+      var handlerResult = handler.main(event, req);
+      Promise.resolve(handlerResult)
+      .then(result => {
+        if(result) {
+          console.log(`${green}Result${reset}`, JSON.stringify(result, null, 4));  
+          res.write(JSON.stringify(result));
+        } else {
+          console.log(`${green}Result${reset} is empty`);
+        }
+        res.end();
+      }).catch(err => {
+        console.log(`${red}Error${reset}`, err);
+        res.write(err);
+        res.statusCode = 500;
+        res.end();
+      });
   });
 }).listen(8080);
