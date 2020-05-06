@@ -164,9 +164,15 @@ chmod +x kyma
 # Connectivity and Dev Command requirements
 
 1) Telepresence
-https://www.telepresence.io/
-
-Installation: Can be installed with homebrew on mac.
+[telepresence](https://www.telepresence.io) is used for the `kyma dev debug` command to forward traffic to the local version of your lambda function.
+Installation: Can be installed with homebrew on mac, see: https://www.telepresence.io/reference/install<br><br>
 
 2) nodemode
-NPM package, can be installed using `npm install nodemon -g`
+nodemon is used for hot reload of lambda functions when executed locally. Also the `kyma dev debug` commands assumes nodemon to be on the path.<br>
+NPM package, can be installed using `npm install nodemon -g`<br><br>
+
+3) ngrok
+Currently the POC makes use of ngrok to open a tunnel to the local commerce installation. Using the free plan is sufficient for now.<br>
+Download here: https://ngrok.com/download
+
+
